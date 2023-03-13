@@ -22,7 +22,7 @@ class PID:
     self.direct = False
     self.last_pv = self.sp = self.model.pv
     self.cv = self.model.cv
-    self.last_error,self.Kp,self.Ti,self.Td = [0.]*4
+    self.last_error,self.Kp,self.Ti,self.Td,self.last_derivterm = [0.]*5
     self.tune(**kwargs)
   def tune(self,Kp=None,Ti=None,Td=None,direct=None,**kwargs):
     self.Kp = float_arg(Kp,self.Kp)
@@ -39,9 +39,10 @@ class PID:
     proportional = (     error - self.last_error) * self.Kp
     integral     = (                       error) / self.Ti
     derivative   = (self.model.pv - self.last_pv) * self.Td
-    dcv = proportional + integral + derivative
-    self.cv += (dcv * (self.direct and -1. or +1.))
+    dCV = proportional + integral + derivative - self.last_derivterm
+    self.cv += (dCV * (self.direct and -1. or +1.))
     self.last_error,self.last_pv = error,self.model.pv
+    self.last_derivterm = derivative
     self.model.update(self.cv)
     return self.last_error
 
