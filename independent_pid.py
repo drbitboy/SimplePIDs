@@ -224,17 +224,17 @@ if "__main__" == __name__:
     ax2.tick_params(axis='y',labelcolor=c2)
     ax2.set_ylim([-.151, 0.01])
 
-    ang, = ax1.plot(times,cvs,color=c1)
-    pos, = ax2.plot(times,pvs,color=c2)
+    ang, = ax1.plot(times,cvs,label='$\\theta_{Beam}$',color=c1)
+    pos, = ax2.plot(times,pvs,label='$P_{Ball}$',color=c2)
 
     plt.title(f"""
 Model[Accel={pid.model.accel_coeff}(m/s$^{{2}}$)/rad, Pos$_{{Initial}}$={p0}m, Vel$_{{Initial}}$={v0}m/s]
 PID[K$_{{P}}$={pid.Kp}, K$_{{I}}$={pid.Ki}, K$_{{D}}$={pid.Kd}]
 """.strip())
 
+    plt.legend(handles=[pos,ang],loc='lower right')
   try:
     assert len(errors) > 1
-    plt.legend(handles=[pos,ang],loc='lower right')
     plt.show()
   except:
     pass
