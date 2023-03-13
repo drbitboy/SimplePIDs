@@ -187,6 +187,7 @@ if "__main__" == __name__:
     ga = getargs(sys.argv[1:],dict(Kp=3,Kd=2,sp=0,direct=False))
     model = SHELL_BALL_BEAM_MODEL
     pid = INDEPENDENTPID(model,**ga).tune(**ga).setsp(**ga)
+    p0,v0, = pid.model.getPV(),pid.model.velocity
     errors = [1.]
     pvs,cvs,times, = list(),list(),list()
     timestep = ga.get('timestep',0.01)
@@ -196,17 +197,44 @@ if "__main__" == __name__:
       pvs.append(pid.last_pv)
       times.append(times and (times[-1]+timestep) or 0.0)
       if len(errors) > 10000: break
-    plt.xlabel('Time, s')
+
+    """
     plt.ylabel('PV (Position, m)\nCV (Tilt angle, rad)')
     plt.axhline(0.0,linestyle='dotted',color='black')
     ##plt.plot(times,errors[1:],label='Error')
     plt.plot(times,pvs,label='Position')
     plt.plot(times,cvs,label='Tilt angle')
-    plt.title(f"Kp,Ki,Kd={pid.Kp},{pid.Ki},{pid.Kd}")
+    """
+
+    fig,ax1=plt.subplots()
+
+    c1 = 'tab:red'
+    c2 = 'tab:blue'
+
+    ax1.set_xlabel('Time, s')
+    ax1.set_ylabel('CV (Tilt angle, rad)',color=c1)
+    ax1.axhline(0,linestyle='dotted',color=c1)
+    ax1.tick_params(axis='y',labelcolor=c1)
+    ax1.set_ylim([-1.0, 0.5])
+
+    ax2=ax1.twinx()
+
+    ax2.set_ylabel('PV (Position, m)',color=c2)
+    ax2.axhline(0,linestyle='dotted',color=c2)
+    ax2.tick_params(axis='y',labelcolor=c2)
+    ax2.set_ylim([-.151, 0.01])
+
+    ang, = ax1.plot(times,cvs,color=c1)
+    pos, = ax2.plot(times,pvs,color=c2)
+
+    plt.title(f"""
+Model[Accel={pid.model.accel_coeff}(m/s$^{{2}}$)/rad, Pos$_{{Initial}}$={p0}m, Vel$_{{Initial}}$={v0}m/s]
+PID[K$_{{P}}$={pid.Kp}, K$_{{I}}$={pid.Ki}, K$_{{D}}$={pid.Kd}]
+""".strip())
 
   try:
-    assert errors
-    plt.legend()
+    assert len(errors) > 1
+    plt.legend(handles=[pos,ang],loc='lower right')
     plt.show()
   except:
     pass
